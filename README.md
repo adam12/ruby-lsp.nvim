@@ -60,3 +60,8 @@ If you want to pass configuration to lspconfig:
   },
 }
 ```
+
+## Disclaimer
+
+This project is not officially connected to the Ruby LSP project, or officially
+endorsed by Shopify in any way.
