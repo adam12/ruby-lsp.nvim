@@ -76,13 +76,13 @@ ruby_lsp.config = {
 }
 
 ruby_lsp.setup = function(config)
-  local options = vim.tbl_deep_extend('force', {}, ruby_lsp.config, config or {})
+  ruby_lsp.options = vim.tbl_deep_extend('force', {}, ruby_lsp.config, config or {})
 
-  if not is_ruby_lsp_installed() and options.auto_install then
+  if not is_ruby_lsp_installed() and ruby_lsp.options.auto_install then
     install_ruby_lsp()
   end
 
-  configure_lspconfig(options.lspconfig)
+  configure_lspconfig(ruby_lsp.options.lspconfig)
 end
 
 
