@@ -132,19 +132,22 @@ end
 ruby_lsp.config = {
   auto_install = true,
   use_launcher = false, -- Use experimental launcher
+  autodetect_tools = true,
   lspconfig = {
     mason = false, -- Prevent LazyVim from installing via Mason
     on_attach = function(client, buffer)
       create_autocmds(client, buffer)
     end,
     before_init = function(_params, config)
-      local tool = detect_tool()
+      if ruby_lsp.options.autodetect_tools then
+        local tool = detect_tool()
 
-      if tool then
-        config.init_options = vim.tbl_extend('force', config.init_options or {}, {
-          formatter = tool,
-          linters = { tool },
-        })
+        if tool then
+          config.init_options = vim.tbl_extend('force', config.init_options or {}, {
+            formatter = tool,
+            linters = { tool },
+          })
+        end
       end
     end,
   },
