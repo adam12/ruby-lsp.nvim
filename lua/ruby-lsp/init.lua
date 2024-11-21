@@ -10,6 +10,36 @@ local function is_ruby_lsp_installed()
   return vim.fn.executable('ruby-lsp') == 1
 end
 
+local function create_autocmds(client, buffer)
+  -- Implementation from https://github.com/semanticart
+  vim.api.nvim_buf_create_user_command(buffer, 'RubyDeps', function(opts)
+      local params = vim.lsp.util.make_text_document_params()
+      local showAll = opts.args == 'all'
+
+      client.request('rubyLsp/workspace/dependencies', params, function(error, result)
+        if error then
+          print('Error showing deps: ' .. error)
+          return
+        end
+
+        local qf_list = {}
+        for _, item in ipairs(result) do
+          if showAll or item.dependency then
+            table.insert(qf_list, {
+              text = string.format('%s (%s) - %s', item.name, item.version, item.dependency),
+              filename = item.path
+            })
+          end
+        end
+
+        vim.fn.setqflist(qf_list)
+        vim.cmd('copen')
+      end, buffer)
+    end,
+    { nargs = '?', complete = function() return { 'all' } end }
+  )
+end
+
 local function install_ruby_lsp()
   vim.notify('Installing ruby-lsp...')
 
@@ -39,6 +69,9 @@ ruby_lsp.config = {
   auto_install = true,
   lspconfig = {
     mason = false, -- Prevent LazyVim from installing via Mason
+    on_attach = function(client, buffer)
+      create_autocmds(client, buffer)
+    end,
   },
 }
 
