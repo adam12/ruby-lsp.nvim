@@ -4,6 +4,28 @@ This Neovim plugin is a small shim around ensuring that the ruby-lsp gem is
 installed for the current Ruby version, as well as configuring lspconfig to
 start the Ruby LSP for Ruby files.
 
+## Why
+
+The Ruby LSP has dependencies which include C extensions, and these extensions
+are compiled against a specific version of Ruby (the Ruby ABI). When ran against
+a different version of Ruby, strange things can happen.
+
+Many people manage their LSPs in Neovim using Mason, which is a fantastic tool
+for managing LSPs, but when it manages Ruby LSPs, it does so by using a single,
+unversioned folder, where the Ruby version is ambiguous. This will cause the
+issues as mentioned above.
+
+The `ruby-lsp.nvim` plugin's goal is two fold:
+
+1. Just install the `ruby-lsp` dependency using regular `gem install`, if it's
+not detected when Neovim starts up. This should work perfectly for almost all
+Ruby version managers.
+
+2. Build on top of the `nvim-lspconfig` package to provide a nicer experience
+out of the box where possible. This might include extra bindings or user commands,
+or smoothing over oddities such as requesting Mason not manage the LSP when using
+the LazyVim distribution.
+
 ## Installation
 
 With Lazy.nvim, add the following to your configuration
