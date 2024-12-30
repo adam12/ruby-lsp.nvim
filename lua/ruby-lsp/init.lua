@@ -82,13 +82,31 @@ ruby_lsp.config = {
 ruby_lsp.setup = function(config)
   ruby_lsp.options = vim.tbl_deep_extend('force', {}, ruby_lsp.config, config or {})
 
-  if not is_ruby_lsp_installed() and ruby_lsp.options.auto_install then
-    install_ruby_lsp(function()
-      configure_lspconfig(ruby_lsp.options.lspconfig)
-    end)
-  else
-    configure_lspconfig(ruby_lsp.options.lspconfig)
-  end
+  local server_started = false
+
+  -- Autocommand to only install ruby-lsp server when opening a Ruby file
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = {'ruby', 'eruby'},
+    callback = function()
+      if not server_started then
+        -- This should only be necessary once per vim session
+        server_started = true
+
+        if not is_ruby_lsp_installed() and ruby_lsp.options.auto_install then
+          install_ruby_lsp(function()
+            configure_lspconfig(ruby_lsp.options.lspconfig)
+            -- Start the ruby lsp now that it's been configured
+            vim.cmd("LspStart ruby_lsp")
+          end)
+        else
+          configure_lspconfig(ruby_lsp.options.lspconfig)
+          -- Start the ruby lsp now that it's been configured
+          vim.cmd("LspStart ruby_lsp")
+        end
+      end
+    end,
+    once = true
+  })
 end
 
 
