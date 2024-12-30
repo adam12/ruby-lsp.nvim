@@ -40,7 +40,7 @@ local function create_autocmds(client, buffer)
   )
 end
 
-local function install_ruby_lsp()
+local function install_ruby_lsp(callback)
   vim.notify('Installing ruby-lsp...')
 
   Job:new({
@@ -50,6 +50,10 @@ local function install_ruby_lsp()
       if return_val == 0 then
         vim.schedule(function()
           vim.notify('Installation of ruby-lsp complete!')
+
+          if callback then
+            callback()
+          end
         end)
       else
         vim.schedule(function()
@@ -79,10 +83,12 @@ ruby_lsp.setup = function(config)
   ruby_lsp.options = vim.tbl_deep_extend('force', {}, ruby_lsp.config, config or {})
 
   if not is_ruby_lsp_installed() and ruby_lsp.options.auto_install then
-    install_ruby_lsp()
+    install_ruby_lsp(function()
+      configure_lspconfig(ruby_lsp.options.lspconfig)
+    end)
+  else
+    configure_lspconfig(ruby_lsp.options.lspconfig)
   end
-
-  configure_lspconfig(ruby_lsp.options.lspconfig)
 end
 
 
