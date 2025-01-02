@@ -71,6 +71,7 @@ end
 
 ruby_lsp.config = {
   auto_install = true,
+  use_launcher = false, -- Use experimental launcher
   lspconfig = {
     mason = false, -- Prevent LazyVim from installing via Mason
     on_attach = function(client, buffer)
@@ -81,6 +82,20 @@ ruby_lsp.config = {
 
 ruby_lsp.setup = function(config)
   ruby_lsp.options = vim.tbl_deep_extend('force', {}, ruby_lsp.config, config or {})
+
+  local lspconfig = require('lspconfig')
+  lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(c)
+    if c.name == 'ruby_lsp' then
+      -- Set a reasonable default if one isn't present
+      if c.cmd == nil then
+        c.cmd = { 'ruby-lsp' }
+      end
+
+      if ruby_lsp.options.use_launcher then
+        table.insert(c.cmd, '--use-launcher')
+      end
+    end
+  end)
 
   local server_started = false
 
