@@ -10,6 +10,14 @@ local function is_ruby_lsp_installed()
   return vim.fn.executable('ruby-lsp') == 1
 end
 
+local function is_standard()
+  return vim.fn.filereadable('.standard.yml') == 1
+end
+
+local function is_rubocop()
+  return vim.fn.filereadable('.rubocop.yml') == 1
+end
+
 local function create_autocmds(client, buffer)
   -- Implementation from https://github.com/semanticart
   vim.api.nvim_buf_create_user_command(buffer, 'RubyDeps', function(opts)
@@ -69,9 +77,20 @@ local function install_ruby_lsp(callback)
   }):start()
 end
 
+local function detect_tool()
+  if is_standard() then
+    return 'standard'
+  end
+
+  if is_rubocop() then
+    return 'rubocop'
+  end
+end
+
 ruby_lsp.config = {
   auto_install = true,
   use_launcher = false, -- Use experimental launcher
+  autodetect_tools = true,
   lspconfig = {
     mason = false, -- Prevent LazyVim from installing via Mason
     on_attach = function(client, buffer)
@@ -93,6 +112,17 @@ ruby_lsp.setup = function(config)
 
       if ruby_lsp.options.use_launcher then
         table.insert(c.cmd, '--use-launcher')
+      end
+
+      if ruby_lsp.options.autodetect_tools then
+        local tool = detect_tool()
+
+        if tool then
+          c.init_options = vim.tbl_extend('force', c.init_options or {}, {
+            formatter = tool,
+            linters = { tool },
+          })
+        end
       end
     end
   end)
