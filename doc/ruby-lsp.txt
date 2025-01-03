@@ -35,6 +35,9 @@ The automatic installation of the `ruby-lsp` gem can be disabled by passing
 The (experimental) launcher of the `ruby-lsp` can be enabled by passing
 `use_launcher = true` in the `config` table.
 
+The automatic detection of Standard or Rubocop can be disabled by passing
+`autodetect_tools = false` in the `config` table.
+
 Any `lspconfig` valid tables can be passed through the `lspconfig` key in the
 `config` table, which will be merged with the default `lspconfig`.
 
