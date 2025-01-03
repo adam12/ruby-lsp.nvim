@@ -138,18 +138,6 @@ ruby_lsp.config = {
     on_attach = function(client, buffer)
       create_autocmds(client, buffer)
     end,
-    before_init = function(_params, config)
-      if ruby_lsp.options.autodetect_tools then
-        local tool = detect_tool()
-
-        if tool then
-          config.init_options = vim.tbl_extend('force', config.init_options or {}, {
-            formatter = tool,
-            linters = { tool },
-          })
-        end
-      end
-    end,
   },
 }
 
@@ -166,6 +154,17 @@ ruby_lsp.setup = function(config)
 
       if ruby_lsp.options.use_launcher then
         table.insert(c.cmd, '--use-launcher')
+      end
+
+      if ruby_lsp.options.autodetect_tools then
+        local tool = detect_tool()
+
+        if tool then
+          c.init_options = vim.tbl_extend('force', c.init_options or {}, {
+            formatter = tool,
+            linters = { tool },
+          })
+        end
       end
     end
   end)
