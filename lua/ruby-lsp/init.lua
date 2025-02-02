@@ -182,7 +182,8 @@ ruby_lsp.setup = function(config)
         vim.cmd("LspStart ruby_lsp")
       end)
     end,
-  {})
+    { desc = "Update the Ruby LSP server" }
+  )
 end
 
 
