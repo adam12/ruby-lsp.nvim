@@ -44,5 +44,8 @@ COMMANDS					            *ruby-lsp-commands*
 - `:RubyDeps` displays the dependencies of the Ruby project inside a quickfix
   window. Pass `all` as an argument to return dependencies of dependencies.
 
+- `:RubyLspUpdate` updates the globally installed `ruby-lsp` gem, and then
+  removes any existing `.ruby-lsp` folder in the current working directory. It
+  will then perform a restart of the `ruby_lsp` server.
 
  vim:tw=78:ts=8:noet:ft=help:norl:
