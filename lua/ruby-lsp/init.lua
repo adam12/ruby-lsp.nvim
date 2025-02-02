@@ -166,10 +166,13 @@ ruby_lsp.setup = function(config)
   })
 
   -- Autocommand to update ruby-lsp
-  vim.api.nvim_create_user_command('RubyLspUpdate', function(opts)
-      -- Todo: CHeck if ruby_lsp running
-      -- Stop LSP
-      vim.cmd("LspStop ruby_lsp")
+  vim.api.nvim_create_user_command('RubyLspUpdate', function()
+      -- Check if ruby_lsp is running to prevent error when stopping non-existant server
+      if #vim.lsp.get_clients({name = 'ruby_lsp'}) > 0 then
+        -- Stop LSP
+        vim.cmd("LspStop ruby_lsp")
+      end
+
       -- Remove .ruby-lsp folder if it exists
       rmdir('.ruby-lsp')
 
