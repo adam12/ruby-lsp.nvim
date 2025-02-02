@@ -80,22 +80,6 @@ local function create_autocmds(client, buffer)
     end,
     { nargs = '?', complete = function() return { 'all' } end }
   )
-
-  vim.api.nvim_buf_create_user_command(buffer, 'RubyLspUpdate', function(opts)
-      -- TODO: Does this work on all buffers?
-      -- Stop LSP
-      vim.cmd("LspStop ruby_lsp")
-      -- Remove .ruby-lsp folder if it exists
-      rmdir('.ruby-lsp')
-
-      -- Run gem update ruby-lsp
-      update_ruby_lsp(function()
-        -- Start LSP
-        vim.cmd("LspStart ruby_lsp")
-      end)
-    end,
-    { nargs = '?', complete = function() return { 'all' } end }
-  )
 end
 
 local function install_ruby_lsp(callback)
@@ -180,6 +164,22 @@ ruby_lsp.setup = function(config)
     end,
     once = true
   })
+
+  -- Autocommand to update ruby-lsp
+  vim.api.nvim_create_user_command('RubyLspUpdate', function(opts)
+      -- Todo: CHeck if ruby_lsp running
+      -- Stop LSP
+      vim.cmd("LspStop ruby_lsp")
+      -- Remove .ruby-lsp folder if it exists
+      rmdir('.ruby-lsp')
+
+      -- Run gem update ruby-lsp
+      update_ruby_lsp(function()
+        -- Start LSP
+        vim.cmd("LspStart ruby_lsp")
+      end)
+    end,
+  {})
 end
 
 
