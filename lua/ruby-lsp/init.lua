@@ -132,7 +132,7 @@ end
 ruby_lsp.config = {
   auto_install = true,
   use_launcher = false, -- Use experimental launcher
-  autodetect_tools = true,
+  autodetect_tools = false, -- Autodetect the formatting and linting tools
   lspconfig = {
     mason = false, -- Prevent LazyVim from installing via Mason
     on_attach = function(client, buffer)
