@@ -5,9 +5,11 @@ local warn = health.warn or health.report_warn
 local error = health.error or health.report_error
 local info = health.info or health.report_info
 
+local util = require("ruby-lsp.health.util")
+
 local required_plugins = {
-	{ lib = "plenary" },
-	{ lib = "lspconfig" },
+	{ name = "plenary" },
+	{ name = "lspconfig" },
 }
 
 local external_dependencies = {
@@ -15,18 +17,16 @@ local external_dependencies = {
 	{ name = "ruby-lsp" },
 }
 
-local util = require("ruby-lsp.health.util")
-
 local M = {}
 
 M.check = function()
 	-- Check Lua plugins
 	start("Checking for required plugins")
 	for _, plugin in ipairs(required_plugins) do
-		if util.lualib_installed(plugin.lib) then
-			ok(plugin.lib .. " installed.")
+		if util.lualib_installed(plugin.name) then
+			ok(plugin.name .. " installed.")
 		else
-			local msg = plugin.lib .. " not found."
+			local msg = plugin.name .. " not found."
 			error(msg)
 		end
 	end
