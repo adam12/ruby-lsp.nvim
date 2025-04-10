@@ -88,6 +88,9 @@ local function create_autocmds(client, buffer)
     end,
     { nargs = '?', complete = function() return { 'all' } end }
   )
+
+	vim.api.nvim_buf_create_user_command(buffer, 'RubyLspInfo', 'checkhealth ruby-lsp',
+		{ nargs = '?', complete = function() return { 'all' } end })
 end
 
 local function install_ruby_lsp(callback)

@@ -36,31 +36,33 @@ M.check = function()
 	for _, dep in ipairs(external_dependencies) do
 		local installed, version, location = util.binary_info(dep.name)
 		if installed then
-			ok(("%s: found %s\n - %s"):format(dep.name, version, location))
+			ok(("%s\n - Version: %s\n - Location: %s"):format(dep.name, version, location))
 		else
 			error(dep.name .. " not found.")
 		end
 	end
 
-	-- Stub for linter/formatter check
+	-- Check configured linter/formatters
 	start("Checking for configured linters")
 	if vim.fn.filereadable(".standard.yml") == 1 then
 		local installed, version, location = util.binary_info("standardrb")
 		if installed then
-		 	ok(("%s: found %s\n - %s"):format("standardrb", version, location))
+			ok(("standardrb\n - Version: %s\n - Location: %s"):format(version, location))
 		else
-			error(("%s configuration is present, but not installed.")):format("standardrb")
+			error("standardrb configuration is present, but not installed.")
 		end
 	elseif vim.fn.filereadable(".rubocop.yml") == 1 then
 		local installed, version, location = util.binary_info("rubocop")
 		if installed then
-			ok(("%s: found %s\n - %s"):format("rubocop", version, location))
+			ok(("rubocop\n - Version: %s\n - Location: %s"):format(version, location))
 		else
-			error(("%s configuration is present, but not installed.")):format("rubocop")
+			error("rubocop configuration is present, but not installed.")
 		end
 	else
 		info("None configured.")
 	end
-end
 
+	-- TODO: add LSP logs? can we ping the LSP server to see if it's running?
+	-- something like "Check Ruby-LSP logs" - to be implemented with the ring buffer
+end
 return M
