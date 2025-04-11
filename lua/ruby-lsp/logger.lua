@@ -71,8 +71,8 @@ function M.show_logs()
   vim.api.nvim_buf_set_option(buf, 'modifiable', false)
   vim.api.nvim_buf_set_option(buf, 'filetype', 'log')
 
-  -- Open in a new window
-  vim.api.nvim_command('vsplit')
+  -- Open in a new tab
+  vim.api.nvim_command('tabnew')
   local win = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_buf(win, buf)
 
