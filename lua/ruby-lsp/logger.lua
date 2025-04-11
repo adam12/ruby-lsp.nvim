@@ -44,10 +44,22 @@ function M.handlers()
       local levels = { 'ERROR', 'WARN', 'INFO', 'LOG', 'DEBUG' }
       local level = levels[result.type] or 'UNKNOWN'
       local timestamp = os.date('%Y-%m-%d %H:%M:%S')
-      local formatted = string.format('[%s] [%s] %s', timestamp, level, result.message)
 
-      -- Add to ring buffer
+      -- Handle multi-line messages by splitting and formatting each line
+      local message_lines = {}
+      for line in result.message:gmatch('[^\r\n]+') do
+        table.insert(message_lines, line)
+      end
+
+      -- Format the first line with timestamp and level
+      local formatted = string.format('[%s] [%s] %s', timestamp, level, message_lines[1] or '')
       add_log(formatted)
+
+      -- Add any additional lines with proper indentation
+      for i = 2, #message_lines do
+        -- Add to ring buffer
+        add_log(string.format('    %s', message_lines[i]))
+      end
     end
   }
 end
