@@ -1,6 +1,8 @@
 local ruby_lsp = {}
 local Job = require('plenary.job')
 
+local logger = require('ruby-lsp/logger')
+
 local function rmdir(dir)
   local handle = vim.loop.fs_scandir(dir)
   if handle then
@@ -21,6 +23,9 @@ end
 
 local function configure_lspconfig(config)
   local lspconfig = require('lspconfig')
+
+  config.handlers = logger.handlers()
+
   lspconfig.ruby_lsp.setup(config)
 end
 
@@ -88,6 +93,10 @@ local function create_autocmds(client, buffer)
     end,
     { nargs = '?', complete = function() return { 'all' } end }
   )
+
+  vim.api.nvim_create_user_command('RubyLspLog', function()
+    logger.show_logs()
+  end, {})
 end
 
 local function install_ruby_lsp(callback)

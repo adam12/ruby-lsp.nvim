@@ -1,0 +1,88 @@
+local M = {}
+
+-- Configuration
+local config = {
+  buffer_size = 100,  -- Number of log messages to keep
+}
+
+-- Ring buffer for storing log messages
+local log_buffer = {}
+local current_index = 0
+
+-- Add a message to the ring buffer
+local function add_log(message)
+  current_index = (current_index % config.buffer_size) + 1
+  log_buffer[current_index] = message
+end
+
+-- Get all logs in chronological order
+local function get_logs()
+  local result = {}
+  local start_idx = (current_index % config.buffer_size) + 1
+
+  -- Add older messages
+  for i = start_idx, config.buffer_size do
+    if log_buffer[i] then
+      table.insert(result, log_buffer[i])
+    end
+  end
+
+  -- Add newer messages
+  for i = 1, current_index do
+    if log_buffer[i] then
+      table.insert(result, log_buffer[i])
+    end
+  end
+
+  return result
+end
+
+function M.handlers()
+  return {
+    ['window/logMessage'] = function(_, result, _)
+      -- Format the message with timestamp and level
+      local levels = { 'ERROR', 'WARN', 'INFO', 'LOG', 'DEBUG' }
+      local level = levels[result.type] or 'UNKNOWN'
+      local timestamp = os.date('%Y-%m-%d %H:%M:%S')
+      local formatted = string.format('[%s] [%s] %s', timestamp, level, result.message)
+
+      -- Add to ring buffer
+      add_log(formatted)
+    end
+  }
+end
+
+-- Show logs in a new window
+function M.show_logs()
+  -- Create a new buffer
+  local buf = vim.api.nvim_create_buf(false, true)
+
+  -- Get logs and format for display
+  local logs = get_logs()
+  local lines = {}
+  for _, log in ipairs(logs) do
+    table.insert(lines, log)
+  end
+
+  -- Set buffer content
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+
+  -- Set buffer options
+  vim.api.nvim_buf_set_option(buf, 'modifiable', false)
+  vim.api.nvim_buf_set_option(buf, 'filetype', 'log')
+
+  -- Open in a new tab
+  vim.api.nvim_command('tabnew')
+  local win = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_buf(win, buf)
+
+  -- Set window options
+  vim.api.nvim_win_set_option(win, 'wrap', false)
+
+  -- Set buffer name
+  vim.api.nvim_buf_set_name(buf, 'Ruby LSP Log')
+
+  return buf
+end
+
+return M
