@@ -41,7 +41,7 @@ function M.handlers()
   return {
     ['window/logMessage'] = function(_, result, _)
       -- Format the message with timestamp and level
-      local levels = { 'ERROR', 'WARN', 'INFO', 'DEBUG' }
+      local levels = { 'ERROR', 'WARN', 'INFO', 'LOG', 'DEBUG' }
       local level = levels[result.type] or 'UNKNOWN'
       local timestamp = os.date('%Y-%m-%d %H:%M:%S')
       local formatted = string.format('[%s] [%s] %s', timestamp, level, result.message)
