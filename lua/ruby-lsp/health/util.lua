@@ -28,14 +28,14 @@ M.binary_info = function(name)
 	return true, version, location
 end
 
-M.configuration_present = function(config_filename)
-	return vim.fn.filereadable(config_filename) == 1
-end
-
-M.check_linter = function(name, config_file)
-	if M.configuration_present(config_file) then
-		return true, name
+M.present_linters = function(linters_table)
+	local present_linters = {}
+	for _, linter in ipairs(linters_table) do
+		if vim.fn.filereadable(linter.config) then
+			table.insert(present_linters, linter)
+		end
 	end
+	return present_linters
 end
 
 return M

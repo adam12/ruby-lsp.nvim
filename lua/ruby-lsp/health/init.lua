@@ -17,6 +17,11 @@ local external_dependencies = {
 	{ name = "ruby-lsp" },
 }
 
+local linters = {
+	{ name = "standardrb", config = ".standard.yml" },
+	{ name = "rubocop", config = ".rubocop.yml" },
+}
+
 local M = {}
 
 M.check = function()
@@ -43,26 +48,20 @@ M.check = function()
 	end
 
 	-- Check configured linter/formatters
-	start("Checking for configured linters")
-	if vim.fn.filereadable(".standard.yml") == 1 then
-		local installed, version, location = util.binary_info("standardrb")
-		if installed then
-			ok(("standardrb\n - Version: %s\n - Location: %s"):format(version, location))
-		else
-			error("standardrb configuration is present, but not installed.")
-		end
-	elseif vim.fn.filereadable(".rubocop.yml") == 1 then
-		local installed, version, location = util.binary_info("rubocop")
-		if installed then
-			ok(("rubocop\n - Version: %s\n - Location: %s"):format(version, location))
-		else
-			error("rubocop configuration is present, but not installed.")
-		end
-	else
+	start("Checking for configured linters/formatters")
+	local present_linters = util.present_linters(linters)
+	if next(present_linters) == nil then
 		info("None configured.")
+	else
+		for _, present_linter in ipairs(present_linters) do
+			local installed, version, location = util.binary_info(present_linter.name)
+			if installed then
+				ok(("%s\n - Version: %s\n - Location: %s"):format(present_linter.name, version, location))
+			else
+				error(("%s configuration is present, but not installed."):format(present_linter.name))
+			end
+		end
 	end
-
-	-- TODO: add LSP logs? can we ping the LSP server to see if it's running?
-	-- something like "Check Ruby-LSP logs" - to be implemented with the ring buffer
 end
+
 return M
