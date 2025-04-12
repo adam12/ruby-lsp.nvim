@@ -25,6 +25,7 @@ describe("health utilities", function()
 			popen_stub = stub(io, "popen")
 		end)
 
+		-- TODO: do we really need to clean this stuff out?
 		after_each(function()
 			vim.fn.executable:revert()
 			popen_stub:revert()
@@ -55,19 +56,27 @@ describe("health utilities", function()
 	end)
 
 	describe("present_linters", function()
+		local linters = {
+			{ name = "testlint", config = ".testlint.yml" },
+		}
+
 		before_each(function()
 			stub(vim.fn, "filereadable")
 		end)
+
 		it("returns linters that exist", function()
 			vim.fn.filereadable.returns(1)
-			local linters = {
-				{ name = "testlint", config = ".testlint.yml" },
-			}
 			local present = util.present_linters(linters)
 			for _, linter in ipairs(present) do
 				assert.equals("testlint", linter.name)
 				assert.equals(".testlint.yml", linter.config)
 			end
+		end)
+
+		it("excludes linters that don't exist", function()
+			vim.fn.filereadable.returns(0)
+			local present = util.present_linters(linters)
+			assert.equals(next(present), nil)
 		end)
 	end)
 end)

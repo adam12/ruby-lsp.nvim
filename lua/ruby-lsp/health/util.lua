@@ -31,7 +31,7 @@ end
 M.present_linters = function(linters_table)
 	local present_linters = {}
 	for _, linter in ipairs(linters_table) do
-		if vim.fn.filereadable(linter.config) then
+		if vim.fn.filereadable(linter.config) == 1 then
 			table.insert(present_linters, linter)
 		end
 	end
