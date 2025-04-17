@@ -94,6 +94,10 @@ local function create_autocmds(client, buffer)
     { nargs = '?', complete = function() return { 'all' } end }
   )
 
+	-- TODO: figure out the best way to create this autocommand
+	-- vim.api.nvim_buf_create_user_command(buffer, 'RubyLspInfo', 'checkhealth ruby-lsp',
+	-- 	{ nargs = '?', complete = function() return { 'all' } end })
+
   vim.api.nvim_create_user_command('RubyLspLog', function()
     logger.show_logs()
   end, {})
