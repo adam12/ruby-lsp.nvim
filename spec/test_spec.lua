@@ -1,0 +1,5 @@
+describe("when github push", function()
+	it("runs the tests", function()
+		assert.equals(true, true)
+	end)
+end)
