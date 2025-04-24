@@ -225,5 +225,17 @@ ruby_lsp.setup = function(config)
   )
 end
 
+vim.lsp.commands['rubyLsp.runTest'] = function(command)
+  -- TODO: run this inline and fill quickfix or diagnostics?
+  vim.cmd(':split | terminal ' .. command.arguments[3])
+end
+
+vim.lsp.commands['rubyLsp.runTestInTerminal'] = function(command)
+  vim.cmd(':terminal ' .. command.arguments[3])
+end
+
+vim.lsp.commands['rubyLsp.debugTest'] = function(command)
+  vim.cmd(':terminal ' .. command.arguments[3])
+end
 
 return ruby_lsp
