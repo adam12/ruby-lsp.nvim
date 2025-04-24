@@ -180,6 +180,16 @@ ruby_lsp.setup = function(config)
 
   local server_started = false
 
+  -- TODO: Do I like this here?
+  vim.api.nvim_create_autocmd('LspAttach', {
+    callback = function(args)
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
+      if client and client.name == 'ruby_lsp' then
+        vim.lsp.codelens.refresh({bufnr = args.buf})
+      end
+    end
+  }) -- TODO: Should we group it? and add description?
+
   -- Autocommand to only install ruby-lsp server when opening a Ruby file
   vim.api.nvim_create_autocmd('FileType', {
     pattern = {'ruby', 'eruby'},
