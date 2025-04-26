@@ -225,5 +225,6 @@ ruby_lsp.setup = function(config)
   )
 end
 
+require('ruby-lsp.codelens').setup_codelens()
 
 return ruby_lsp
