@@ -13,7 +13,7 @@ local function rmdir(dir)
       local path = dir .. '/' .. name
       if type == 'directory' then
         rmdir(path)
-        else
+      else
         vim.loop.fs_unlink(path)
       end
     end
@@ -40,67 +40,49 @@ local function update_ruby_lsp(callback)
         vim.schedule(function()
           vim.notify('Update of ruby-lsp complete!')
 
-          if callback then
-            callback()
-          end
+          if callback then callback() end
         end)
       else
-        vim.schedule(function()
-          vim.notify('Update of ruby-lsp failed!')
-        end)
+        vim.schedule(function() vim.notify('Update of ruby-lsp failed!') end)
       end
-    end
+    end,
   }):start()
 end
 
-local function is_ruby_lsp_installed()
-  return vim.fn.executable('ruby-lsp') == 1
-end
+local function is_ruby_lsp_installed() return vim.fn.executable('ruby-lsp') == 1 end
 
-local function is_standard()
-  return vim.fn.filereadable('.standard.yml') == 1
-end
+local function is_standard() return vim.fn.filereadable('.standard.yml') == 1 end
 
-local function is_rubocop()
-  return vim.fn.filereadable('.rubocop.yml') == 1
-end
+local function is_rubocop() return vim.fn.filereadable('.rubocop.yml') == 1 end
 
 local function create_autocmds(client, buffer)
   -- Implementation from https://github.com/semanticart
   vim.api.nvim_buf_create_user_command(buffer, 'RubyDeps', function(opts)
-      local params = vim.lsp.util.make_text_document_params()
-      local showAll = opts.args == 'all'
+    local params = vim.lsp.util.make_text_document_params()
+    local showAll = opts.args == 'all'
 
-      client.request('rubyLsp/workspace/dependencies', params, function(error, result)
-        if error then
-          print('Error showing deps: ' .. error)
-          return
+    client.request('rubyLsp/workspace/dependencies', params, function(error, result)
+      if error then
+        print('Error showing deps: ' .. error)
+        return
+      end
+
+      local qf_list = {}
+      for _, item in ipairs(result) do
+        if showAll or item.dependency then
+          table.insert(qf_list, {
+            text = string.format('%s (%s) - %s', item.name, item.version, item.dependency),
+            filename = item.path,
+          })
         end
+      end
 
-        local qf_list = {}
-        for _, item in ipairs(result) do
-          if showAll or item.dependency then
-            table.insert(qf_list, {
-              text = string.format('%s (%s) - %s', item.name, item.version, item.dependency),
-              filename = item.path
-            })
-          end
-        end
+      vim.fn.setqflist(qf_list)
+      vim.cmd('copen')
+    end, buffer)
+  end, { nargs = '?', complete = function() return { 'all' } end })
 
-        vim.fn.setqflist(qf_list)
-        vim.cmd('copen')
-      end, buffer)
-    end,
-    { nargs = '?', complete = function() return { 'all' } end }
-  )
-
-	-- TODO: figure out the best way to create this autocommand
-	-- vim.api.nvim_buf_create_user_command(buffer, 'RubyLspInfo', 'checkhealth ruby-lsp',
-	-- 	{ nargs = '?', complete = function() return { 'all' } end })
-
-  vim.api.nvim_create_user_command('RubyLspLog', function()
-    logger.show_logs()
-  end, {})
+  vim.api.nvim_create_user_command('RubyLspLog', function() logger.show_logs() end, {})
 end
 
 local function install_ruby_lsp(callback)
@@ -114,32 +96,22 @@ local function install_ruby_lsp(callback)
         vim.schedule(function()
           vim.notify('Installation of ruby-lsp complete!')
 
-          if callback then
-            callback()
-          end
+          if callback then callback() end
         end)
       else
-        vim.schedule(function()
-          vim.notify('Installation of ruby-lsp failed!')
-        end)
+        vim.schedule(function() vim.notify('Installation of ruby-lsp failed!') end)
       end
     end,
     on_stderr = function(_, msg)
-      vim.schedule(function()
-        vim.notify(msg)
-      end)
+      vim.schedule(function() vim.notify(msg) end)
     end,
   }):start()
 end
 
 local function detect_tool()
-  if is_standard() then
-    return 'standard'
-  end
+  if is_standard() then return 'standard' end
 
-  if is_rubocop() then
-    return 'rubocop'
-  end
+  if is_rubocop() then return 'rubocop' end
 end
 
 ruby_lsp.config = {
@@ -148,9 +120,7 @@ ruby_lsp.config = {
   autodetect_tools = false, -- Autodetect the formatting and linting tools
   lspconfig = {
     mason = false, -- Prevent LazyVim from installing via Mason
-    on_attach = function(client, buffer)
-      create_autocmds(client, buffer)
-    end,
+    on_attach = function(client, buffer) create_autocmds(client, buffer) end,
   },
 }
 
@@ -161,13 +131,9 @@ ruby_lsp.setup = function(config)
   lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(c)
     if c.name == 'ruby_lsp' then
       -- Set a reasonable default if one isn't present
-      if c.cmd == nil then
-        c.cmd = { 'ruby-lsp' }
-      end
+      if c.cmd == nil then c.cmd = { 'ruby-lsp' } end
 
-      if ruby_lsp.options.use_launcher then
-        table.insert(c.cmd, '--use-launcher')
-      end
+      if ruby_lsp.options.use_launcher then table.insert(c.cmd, '--use-launcher') end
 
       if ruby_lsp.options.autodetect_tools then
         local tool = detect_tool()
@@ -186,7 +152,7 @@ ruby_lsp.setup = function(config)
 
   -- Autocommand to only install ruby-lsp server when opening a Ruby file
   vim.api.nvim_create_autocmd('FileType', {
-    pattern = {'ruby', 'eruby'},
+    pattern = { 'ruby', 'eruby' },
     callback = function()
       if not server_started then
         -- This should only be necessary once per vim session
@@ -196,38 +162,37 @@ ruby_lsp.setup = function(config)
           install_ruby_lsp(function()
             configure_lspconfig(ruby_lsp.options.lspconfig)
             -- Start the ruby lsp now that it's been configured
-            vim.cmd("LspStart ruby_lsp")
+            vim.cmd('LspStart ruby_lsp')
           end)
         else
           configure_lspconfig(ruby_lsp.options.lspconfig)
           -- Start the ruby lsp now that it's been configured
-          vim.cmd("LspStart ruby_lsp")
+          vim.cmd('LspStart ruby_lsp')
         end
       end
     end,
-    once = true
+    once = true,
   })
 
   -- Autocommand to update ruby-lsp
   vim.api.nvim_create_user_command('RubyLspUpdate', function()
-      -- Check if ruby_lsp is running to prevent error when stopping non-existant server
-      if #vim.lsp.get_clients({name = 'ruby_lsp'}) > 0 then
-        -- Stop LSP
-        vim.cmd("LspStop ruby_lsp")
-      end
+    -- Check if ruby_lsp is running to prevent error when stopping non-existant server
+    if #vim.lsp.get_clients({ name = 'ruby_lsp' }) > 0 then
+      -- Stop LSP
+      vim.cmd('LspStop ruby_lsp')
+    end
 
-      -- Remove .ruby-lsp folder if it exists
-      rmdir('.ruby-lsp')
+    -- Remove .ruby-lsp folder if it exists
+    rmdir('.ruby-lsp')
 
-      -- Run gem update ruby-lsp
-      update_ruby_lsp(function()
-        -- Start LSP
-        vim.cmd("LspStart ruby_lsp")
-      end)
-    end,
-    { desc = "Update the Ruby LSP server" }
-  )
+    -- Run gem update ruby-lsp
+    update_ruby_lsp(function()
+      -- Start LSP
+      vim.cmd('LspStart ruby_lsp')
+    end)
+  end, { desc = 'Update the Ruby LSP server' })
 end
 
+require('ruby-lsp.codelens').setup_codelens()
 
 return ruby_lsp

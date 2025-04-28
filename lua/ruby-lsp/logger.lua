@@ -2,7 +2,7 @@ local M = {}
 
 -- Configuration
 local config = {
-  buffer_size = 100,  -- Number of log messages to keep
+  buffer_size = 100, -- Number of log messages to keep
 }
 
 -- Ring buffer for storing log messages
@@ -22,16 +22,12 @@ local function get_logs()
 
   -- Add older messages
   for i = start_idx, config.buffer_size do
-    if log_buffer[i] then
-      table.insert(result, log_buffer[i])
-    end
+    if log_buffer[i] then table.insert(result, log_buffer[i]) end
   end
 
   -- Add newer messages
   for i = 1, current_index do
-    if log_buffer[i] then
-      table.insert(result, log_buffer[i])
-    end
+    if log_buffer[i] then table.insert(result, log_buffer[i]) end
   end
 
   return result
@@ -60,7 +56,7 @@ function M.handlers()
         -- Add to ring buffer
         add_log(string.format('    %s', message_lines[i]))
       end
-    end
+    end,
   }
 end
 
