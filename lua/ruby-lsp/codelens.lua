@@ -5,6 +5,57 @@
 -- 3. Implementing handlers for Ruby LSP specific commands
 
 local M = {}
+local util = require('ruby-lsp.util')
+
+local output_bufnr = nil
+local output_winnr = nil
+local append_position = 0
+
+---Handles command response from jobstart
+---Appends the output to the output buffer
+---@param _ integer Ignored channel id
+---@param output string[] Output data from the command
+local function display_command_output(_, output)
+  if not output then return end
+  assert(output_bufnr, 'output_bufnr must be set before handling output') -- Help linter
+
+  util.buffer.append(output_bufnr, output, append_position, function() append_position = append_position + #output end)
+end
+
+---Creates a split window to display command output
+---Sets up the buffer and window for displaying command output, then runs the command asynchronously
+---@param command string Command to run
+local function run_command_in_split(command)
+  -- Prepare the buffer
+  if not util.buffer.is_valid(output_bufnr) then
+    output_bufnr = util.buffer.create_scratch('Command Output: ' .. command)
+  end
+  assert(output_bufnr, 'output_bufnr must be set before handling output') -- Help Linter
+  util.buffer.make_modifiable(output_bufnr)
+  util.buffer.reset_contents(output_bufnr, { 'Running command: ' .. command, '' })
+
+  -- Prepare the window
+  if not util.window.is_valid(output_winnr) then
+    output_winnr = util.window.split_and_retain_focus(output_bufnr, {
+      number = false,
+      relativenumber = false,
+    })
+  end
+
+  append_position = 2 -- Current line for appending output (start after the header line)
+
+  -- Run the command asynchronously
+  local job_id = vim.fn.jobstart(command, {
+    on_stdout = display_command_output,
+    on_stderr = display_command_output,
+    on_exit = function() util.buffer.make_nomodifiable(output_bufnr) end,
+    stdout_buffered = false,
+    stderr_buffered = false,
+  })
+
+  -- If job failed to start
+  if job_id <= 0 then vim.notify('Failed to start command: ' .. command, vim.log.levels.ERROR) end
+end
 
 local original_codelens_handler = vim.lsp.codelens.on_codelens
 local supported_commands = {
@@ -13,9 +64,10 @@ local supported_commands = {
   ['rubyLsp.openFile'] = true,
 }
 
--- Override the default lens handler.
--- This allows us to filter unsupported command, like "Debug"
+---Sets up filters for code lenses to only show supported commands
+---Overrides the default LSP code lens handler to filter out unsupported commands like 'Debug'
 local function setup_lens_filters()
+  ---@diagnostic disable-next-line: duplicate-set-field
   vim.lsp.codelens.on_codelens = function(err, result, ctx)
     local client = vim.lsp.get_client_by_id(ctx.client_id)
     -- Only proceed if we're working with ruby_lsp
@@ -30,6 +82,7 @@ local function setup_lens_filters()
   end
 end
 
+---Creates autocommands to refresh code lenses on various events
 local function setup_refresh_autocmd()
   vim.api.nvim_create_autocmd({ 'LspAttach', 'BufEnter', 'CursorHold', 'InsertLeave' }, {
     pattern = { '*.rb', '*.erb' },
@@ -38,12 +91,14 @@ local function setup_refresh_autocmd()
   })
 end
 
--- This is used as a callback when handling openFile commands.
--- Edit the given file. Handles line numbers in the URI
--- URIs are in the forms:
---   file:///path/to/file.rb
---   file:///path/to/file.rb#L99
--- We strip the protocol and line numbers from the path
+---This is used as a callback when handling openFile commands.
+---Edit the given file. Handles line numbers in the URI
+---URIs are in the forms:
+---  file:///path/to/file.rb
+---  file:///path/to/file.rb#L99
+---We strip the protocol and line numbers from the path
+---@param uri string File URI in format 'file:///path/to/file.rb' or 'file:///path/to/file.rb#L99'
+---@param _ any Ignored callback context parameter
 local function edit_file(uri, _)
   -- If the file picker is cancelled, the callback still runs
   if not uri then return end
@@ -54,13 +109,24 @@ local function edit_file(uri, _)
   vim.cmd(string.format('edit +%d %s', line, path))
 end
 
--- Launch the test runner command
-local function run_test_command(command) vim.cmd(':split | terminal ' .. command.arguments[3]) end
+---Launch the test runner command
+---@param command table Command table from LSP
+local function run_test_command(command)
+  --Display test command output in a split window
+  run_command_in_split(command.arguments[3])
+end
 
--- Launch the task runner command, used for doing migrations
-local function run_task_command(command) vim.cmd(':split | terminal ' .. command.arguments[1]) end
+---Launch the task runner command, used for doing migrations
+---@param command table Command table from LSP
+local function run_task_command(command)
+  -- Display task command output in a split window
+  run_command_in_split(command.arguments[1])
+end
 
--- Jump to file support
+---Jump to file support
+---Opens file(s) specified in the command arguments
+---Shows a selection UI if multiple files are available
+---@param command table Command table with arguments
 local function open_file_command(command)
   -- command.arguments[1] is a list of one or more file uris
   local uris = command.arguments[1]
@@ -79,6 +145,10 @@ local function open_file_command(command)
   end
 end
 
+---Sets up code lens functionality for Ruby LSP
+---1. Sets up filtering for supported code lens commands
+---2. Creates autocommands to refresh code lenses
+---3. Registers handlers for Ruby LSP specific commands
 M.setup_codelens = function()
   setup_lens_filters()
   setup_refresh_autocmd()
