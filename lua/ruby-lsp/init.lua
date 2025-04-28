@@ -193,4 +193,6 @@ ruby_lsp.setup = function(config)
   end, { desc = "Update the Ruby LSP server" })
 end
 
+require('ruby-lsp.codelens').setup_codelens()
+
 return ruby_lsp
