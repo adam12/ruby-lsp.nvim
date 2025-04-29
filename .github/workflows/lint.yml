@@ -1,0 +1,19 @@
+---
+name: Lint with Stylua
+on:
+  pull_request: ~
+  push:
+    branches:
+      - main
+
+jobs:
+  stylua:
+    name: Run stylua
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: JohnnyMorganz/stylua-action@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          args: --color always --check .
