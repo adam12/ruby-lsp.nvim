@@ -12,6 +12,8 @@ Features:
 
 - Some conveniences around interacting with the Ruby LSP.
 
+- Basic code lens support.
+
 # Setup ~
 
 This module needs a setup with `require('ruby-lsp').setup({})` (replace `{}`

@@ -83,6 +83,42 @@ If you want to pass configuration to lspconfig:
 }
 ```
 
+## Code Lens
+
+This plugin provides code lens support for some Rails-specific features:
+
+ - `openFile` – Jump from a controller action to the corresponding view or route
+    definition.
+ - `runTest` – Run a test file or an individual test and display the output in a
+    split window.
+ - `runTask` – Run database migrations.
+
+Code lens virtual text will be added where these features are available.
+
+You can run available lens actions using `vim.lsp.codelens.run()`. Or, add a key
+mapping:
+
+```lua
+{
+  'adam12/ruby-lsp.nvim',
+  ft = { 'ruby', 'eruby' },
+  ...
+  keys = {
+    {
+      '<leader>cl',
+      function()
+        vim.lsp.codelens.run()
+      end,
+      desc = 'Run Code Lens',
+    },
+  },
+}
+```
+
+Note: When you include a `keys` entry in your plugin spec, Lazy.nvim will treat the
+plugin as lazy-loaded and only load it when one of those keys is pressed. To
+ensure the plugin loads when editing Ruby files, use the `ft` (filetype) option.
+
 ## Disclaimer
 
 This project is not officially connected to the Ruby LSP project, or officially
