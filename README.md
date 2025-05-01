@@ -101,6 +101,7 @@ mapping:
 ```lua
 {
   'adam12/ruby-lsp.nvim',
+  ft = { 'ruby', 'eruby' },
   ...
   keys = {
     {
@@ -113,6 +114,10 @@ mapping:
   },
 }
 ```
+
+Note: When you include a `keys` entry in your plugin spec, Lazy.nvim will treat the
+plugin as lazy-loaded and only load it when one of those keys is pressed. To
+ensure the plugin loads when editing Ruby files, use the `ft` (filetype) option.
 
 ## Disclaimer
 
