@@ -62,7 +62,6 @@ local supported_commands = {
   ['rubyLsp.runTest'] = true,
   ['rubyLsp.runTask'] = true,
   ['rubyLsp.openFile'] = true,
-  ['rubyLsp.debugTest'] = true,
 }
 
 ---Sets up filters for code lenses to only show supported commands
@@ -199,6 +198,7 @@ M.setup_codelens = function()
     M._dap = dap
     setup_dap()
     vim.lsp.commands['rubyLsp.debugTest'] = debug_command
+    supported_commands['rubyLsp.debugTest'] = true
   end
 
   -- Not currenlty supported:
