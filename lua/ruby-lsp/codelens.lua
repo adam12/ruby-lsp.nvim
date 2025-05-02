@@ -62,6 +62,7 @@ local supported_commands = {
   ['rubyLsp.runTest'] = true,
   ['rubyLsp.runTask'] = true,
   ['rubyLsp.openFile'] = true,
+  ['rubyLsp.debugTest'] = true,
 }
 
 ---Sets up filters for code lenses to only show supported commands
@@ -145,6 +146,43 @@ local function open_file_command(command)
   end
 end
 
+local function setup_dap()
+  M._dap.adapters.ruby_lsp = function(on_config, config)
+    on_config({
+      type = 'pipe',
+      pipe = '${pipe}',
+      executable = {
+        command = 'bundle',
+        args = {
+          'exec',
+          'rdbg',
+          '--no-color',
+          '--open',
+          '--sock-path=${pipe}',
+          '--',
+          unpack(config.args or {}),
+        },
+      },
+    })
+  end
+end
+
+---Debug the current test file or individual test
+---@param command table Command table from LSP
+local function debug_command(command)
+  -- This is in the form "/path/to/ruby bin/rails test /path/to/test.rb:line_number"
+  local program_args = util.split(command.arguments[3])
+  -- We want to drop the "path/to/ruby"
+  table.remove(program_args, 1)
+
+  M._dap.run({
+    type = 'ruby_lsp',
+    name = 'Debug test',
+    request = 'launch',
+    args = program_args,
+  })
+end
+
 ---Sets up code lens functionality for Ruby LSP
 ---1. Sets up filtering for supported code lens commands
 ---2. Creates autocommands to refresh code lenses
@@ -155,6 +193,14 @@ M.setup_codelens = function()
   vim.lsp.commands['rubyLsp.runTest'] = run_test_command
   vim.lsp.commands['rubyLsp.runTask'] = run_task_command
   vim.lsp.commands['rubyLsp.openFile'] = open_file_command
+
+  local ok, dap = pcall(require, 'dap')
+  if ok then
+    M._dap = dap
+    setup_dap()
+    vim.lsp.commands['rubyLsp.debugTest'] = debug_command
+  end
+
   -- Not currenlty supported:
   --   - rubyLsp.runTestInTerminal
   --   - rubyLsp.debugTest
