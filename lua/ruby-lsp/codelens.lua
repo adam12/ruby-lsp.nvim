@@ -7,6 +7,15 @@
 local M = {}
 local util = require('ruby-lsp.util')
 
+-- Parse test output for quickfix.
+-- Equivalent to `setlocal errorformat=%Z,%E%>Failure:,%C%o\ [%f:%l]:,%+C%.%#,%-G%.%#`
+local errorformat = table.concat({
+  '%Z', -- Consider any blank line to be the end of a multiline message
+  '%E%>Failure:', -- "Failure:" Start capturing multiline message
+  '%C%o [%f:%l]:', -- Match test name, file and line (module capture seems to be broken?)
+  '%+C%.%#', -- Add any line with content to the message (while we are in multiline context)
+  '%-G%.%#', -- Ignore any unmatched lines
+}, ',')
 local output_bufnr = nil
 local output_winnr = nil
 local append_position = 0
@@ -60,6 +69,7 @@ end
 local original_codelens_handler = vim.lsp.codelens.on_codelens
 local supported_commands = {
   ['rubyLsp.runTest'] = true,
+  ['rubyLsp.runTestInTerminal'] = true,
   ['rubyLsp.runTask'] = true,
   ['rubyLsp.openFile'] = true,
 }
@@ -109,11 +119,36 @@ local function edit_file(uri, _)
   vim.cmd(string.format('edit +%d %s', line, path))
 end
 
----Launch the test runner command
+---Launch the test runner command and display output
 ---@param command table Command table from LSP
-local function run_test_command(command)
+local function run_test_in_terminal_command(command)
   --Display test command output in a split window
   run_command_in_split(command.arguments[3])
+end
+
+---Launch the test runner command and populate quickfix
+---@param command table Command table from LSP
+local function run_test_command(command)
+  vim.notify('Running tests...')
+  -- We run the command manually, rather than setting `makeprg` and running `:make` so we don't block the UI
+  vim.fn.jobstart(command.arguments[3], {
+    stdout_buffered = true,
+    stderr_buffered = true,
+    on_stdout = function(_, data)
+      if data then
+        -- Parse output using errorformat
+        vim.fn.setqflist({}, ' ', {
+          title = 'rails/test',
+          lines = data,
+          efm = errorformat,
+        })
+        vim.cmd('cwindow')
+      end
+    end,
+    on_stderr = function(_, data)
+      if data and data[1] ~= '' then print('Error: ' .. table.concat(data, '\n'), vim.log.levels.WARN) end
+    end,
+  })
 end
 
 ---Launch the task runner command, used for doing migrations
@@ -153,10 +188,10 @@ M.setup_codelens = function()
   setup_lens_filters()
   setup_refresh_autocmd()
   vim.lsp.commands['rubyLsp.runTest'] = run_test_command
+  vim.lsp.commands['rubyLsp.runTestInTerminal'] = run_test_in_terminal_command
   vim.lsp.commands['rubyLsp.runTask'] = run_task_command
   vim.lsp.commands['rubyLsp.openFile'] = open_file_command
   -- Not currenlty supported:
-  --   - rubyLsp.runTestInTerminal
   --   - rubyLsp.debugTest
 end
 
