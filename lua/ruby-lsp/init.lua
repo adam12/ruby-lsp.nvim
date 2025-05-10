@@ -142,6 +142,11 @@ ruby_lsp.setup = function(config)
           c.init_options = vim.tbl_extend('force', c.init_options or {}, {
             formatter = tool,
             linters = { tool },
+            addonSettings = {
+              ["Ruby LSP Rails"] = {
+                enablePendingMigrationsPrompt = false,
+              },
+            },
           })
         end
       end
