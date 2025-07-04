@@ -52,6 +52,21 @@ M.buffer = {
   end,
 }
 
+M.quickfix = {
+  append = function(output, title, errorformat)
+    if not output then return end
+
+    vim.fn.setqflist({}, 'a', {
+      title = title,
+      lines = output,
+      efm = errorformat,
+    })
+    -- vim.cmd('cwindow')
+  end,
+
+  clear = function() vim.fn.setqflist({}, 'r') end,
+}
+
 M.window = {
   ---Check if a window is valid.
   ---@param winnr integer|nil Window number
@@ -77,5 +92,22 @@ M.window = {
     return winnr
   end,
 }
+
+---Edit the given file. This is used as a callback when handling openFile commands.
+---URIs are in the forms:
+---  file:///path/to/file.rb
+---  file:///path/to/file.rb#L99
+---We strip the protocol and line numbers from the path
+---@param uri string File URI in format 'file:///path/to/file.rb' or 'file:///path/to/file.rb#L99'
+---@param _ any Ignored callback context parameter
+M.edit_file = function(uri, _)
+  -- If the file picker is cancelled, the callback still runs
+  if not uri then return end
+
+  local line = tonumber(uri:match('#L(%d+)') or 1) -- Extract the line number, default to 1
+  local path = uri:gsub('^file://', ''):gsub('#L%d+', '') -- Remove the protocol and line number
+
+  vim.cmd(string.format('edit +%d %s', line, path))
+end
 
 return M
