@@ -22,11 +22,10 @@ local function rmdir(dir)
 end
 
 local function configure_lspconfig(config)
-  local lspconfig = require('lspconfig')
-
   config.handlers = logger.handlers()
 
-  lspconfig.ruby_lsp.setup(config)
+  -- Use new Neovim 0.11+ API
+  vim.lsp.enable('ruby_lsp', config)
 end
 
 local function update_ruby_lsp(callback)
@@ -127,26 +126,30 @@ ruby_lsp.config = {
 ruby_lsp.setup = function(config)
   ruby_lsp.options = vim.tbl_deep_extend('force', {}, ruby_lsp.config, config or {})
 
-  local lspconfig = require('lspconfig')
-  lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(c)
-    if c.name == 'ruby_lsp' then
-      -- Set a reasonable default if one isn't present
-      if c.cmd == nil then c.cmd = { 'ruby-lsp' } end
+  -- Configure ruby_lsp using new Neovim 0.11+ API
+  local lsp_config = vim.tbl_deep_extend('force', ruby_lsp.options.lspconfig, {
+    cmd = { 'ruby-lsp' },
+  })
 
-      if ruby_lsp.options.use_launcher then table.insert(c.cmd, '--use-launcher') end
+  -- Add use_launcher flag if enabled
+  if ruby_lsp.options.use_launcher then
+    table.insert(lsp_config.cmd, '--use-launcher')
+  end
 
-      if ruby_lsp.options.autodetect_tools then
-        local tool = detect_tool()
+  -- Autodetect formatting/linting tools
+  if ruby_lsp.options.autodetect_tools then
+    local tool = detect_tool()
 
-        if tool then
-          c.init_options = vim.tbl_extend('force', c.init_options or {}, {
-            formatter = tool,
-            linters = { tool },
-          })
-        end
-      end
+    if tool then
+      lsp_config.init_options = vim.tbl_extend('force', lsp_config.init_options or {}, {
+        formatter = tool,
+        linters = { tool },
+      })
     end
-  end)
+  end
+
+  -- Set the configuration for ruby_lsp
+  vim.lsp.config.ruby_lsp = lsp_config
 
   local server_started = false
 
