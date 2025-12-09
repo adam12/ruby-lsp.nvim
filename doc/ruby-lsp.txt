@@ -26,8 +26,9 @@ with your `config` table).
   when multiple versions of Ruby are in use.
 
 'nvim-lspconfig':
-  Complimentary, but satisfies the lowest common denominator across all LSP
-  implementations. A good baseline that we build on top of.
+  Optional on Neovim 0.11+. The plugin will use native LSP APIs if lspconfig
+  is not available. On Neovim 0.10 and earlier, lspconfig is required.
+  When present, provides a complimentary baseline that we build on top of.
 
 # Customizing ~
 
@@ -40,8 +41,9 @@ The (experimental) launcher of the `ruby-lsp` can be enabled by passing
 The automatic detection of Standard or Rubocop can be enabled by passing
 `autodetect_tools = true` in the `config` table.
 
-Any `lspconfig` valid tables can be passed through the `lspconfig` key in the
-`config` table, which will be merged with the default `lspconfig`.
+LSP configuration options can be passed through the `lspconfig` key in the
+`config` table. On Neovim 0.11+ with native LSP, these options are used
+directly. When using nvim-lspconfig, they are merged with the default config.
 
 ------------------------------------------------------------------------------
 COMMANDS					            *ruby-lsp-commands*

@@ -36,7 +36,38 @@ the LazyVim distribution.
 
 ## Installation
 
-With Lazy.nvim, add the following to your configuration
+### Neovim 0.11+
+
+With Neovim 0.11 or later, `nvim-lspconfig` is optional. The plugin will use native LSP APIs if lspconfig is not available:
+
+```lua
+{
+  'adam12/ruby-lsp.nvim',
+  dependencies = {
+    'nvim-lua/plenary.nvim',
+    -- nvim-lspconfig is optional on Neovim 0.11+
+    -- 'neovim/nvim-lspconfig',
+  },
+  config = true,
+}
+```
+
+If you prefer to use `nvim-lspconfig`, you can still include it as a dependency:
+
+```lua
+{
+  'adam12/ruby-lsp.nvim',
+  dependencies = {
+    'nvim-lua/plenary.nvim',
+    'neovim/nvim-lspconfig',
+  },
+  config = true,
+}
+```
+
+### Neovim 0.10 and earlier
+
+For Neovim 0.10 and earlier, `nvim-lspconfig` is required:
 
 ```lua
 {
@@ -54,6 +85,8 @@ With Lazy.nvim, add the following to your configuration
 Just open Neovim. The Ruby LSP should be installed if not present, and Neovim
 will be configured to start the Ruby LSP when opening a Ruby file.
 
+### Configuration Examples
+
 If you'd like to disable the auto-install:
 
 ```lua
@@ -61,7 +94,7 @@ If you'd like to disable the auto-install:
   'adam12/ruby-lsp.nvim',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    'neovim/nvim-lspconfig',
+    -- nvim-lspconfig is optional on Neovim 0.11+
   },
   config = true,
   opts = {
@@ -70,14 +103,14 @@ If you'd like to disable the auto-install:
 }
 ```
 
-If you want to pass configuration to lspconfig:
+If you want to pass LSP configuration options (works with both lspconfig and native LSP):
 
 ```lua
 {
   'adam12/ruby-lsp.nvim',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    'neovim/nvim-lspconfig',
+    -- nvim-lspconfig is optional on Neovim 0.11+
   },
   config = true,
   opts = {
