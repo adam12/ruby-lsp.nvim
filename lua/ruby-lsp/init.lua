@@ -121,6 +121,7 @@ ruby_lsp.config = {
   lspconfig = {
     mason = false, -- Prevent LazyVim from installing via Mason
     on_attach = function(client, buffer) create_autocmds(client, buffer) end,
+    on_init = function(_, initialize_result) logger.log_initialize(initialize_result) end,
   },
 }
 

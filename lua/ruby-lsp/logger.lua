@@ -60,6 +60,19 @@ function M.handlers()
   }
 end
 
+-- Log the initialize result from the LSP server
+function M.log_initialize(result)
+  if result.capabilities then
+    local timestamp = os.date('%Y-%m-%d %H:%M:%S')
+    local caps = {}
+    for key, _ in pairs(result.capabilities) do
+      table.insert(caps, key)
+    end
+    table.sort(caps)
+    add_log(string.format('[%s] [INIT] Capabilities: %s', timestamp, table.concat(caps, ', ')))
+  end
+end
+
 -- Show logs in a new window
 function M.show_logs()
   -- Create a new buffer
