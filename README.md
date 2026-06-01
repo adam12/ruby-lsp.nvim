@@ -30,9 +30,10 @@ the LazyVim distribution.
 
 | Version | Support Level | Notes |
 |---------|---------------|-------|
-| 0.10    | Limited       | Requires nvim-lspconfig |
-| 0.11    | Full          | Current stable release |
-| 0.12    | Full          | Next release |
+| 0.10    | Unsupported   | May still work but receives no testing or fixes |
+| 0.11    | Unsupported   | May still work but receives no testing or fixes |
+| 0.12    | Full          | Current stable release |
+| 0.13    | Full          | Next release |
 
 ## Installation
 
