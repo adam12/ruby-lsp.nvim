@@ -163,29 +163,34 @@ ruby_lsp.setup = function(config)
 
   local server_started = false
 
+  local function start_ruby_lsp()
+    if server_started then return end
+    -- This should only be necessary once per vim session
+    server_started = true
+
+    if not is_ruby_lsp_installed() and ruby_lsp.options.auto_install then
+      install_ruby_lsp(function()
+        configure_lspconfig(ruby_lsp.options.lspconfig)
+        -- Start the ruby lsp now that it's been configured
+        vim.cmd('LspStart ruby_lsp')
+      end)
+    else
+      configure_lspconfig(ruby_lsp.options.lspconfig)
+      -- Start the ruby lsp now that it's been configured
+      vim.cmd('LspStart ruby_lsp')
+    end
+  end
+
   -- Autocommand to only install ruby-lsp server when opening a Ruby file
   vim.api.nvim_create_autocmd('FileType', {
     pattern = { 'ruby', 'eruby' },
-    callback = function()
-      if not server_started then
-        -- This should only be necessary once per vim session
-        server_started = true
-
-        if not is_ruby_lsp_installed() and ruby_lsp.options.auto_install then
-          install_ruby_lsp(function()
-            configure_lspconfig(ruby_lsp.options.lspconfig)
-            -- Start the ruby lsp now that it's been configured
-            vim.cmd('LspStart ruby_lsp')
-          end)
-        else
-          configure_lspconfig(ruby_lsp.options.lspconfig)
-          -- Start the ruby lsp now that it's been configured
-          vim.cmd('LspStart ruby_lsp')
-        end
-      end
-    end,
+    callback = start_ruby_lsp,
     once = true,
   })
+
+  -- If a Ruby buffer is already loaded (e.g. plugin lazy-loaded after open),
+  -- the FileType event already fired and the autocmd above would never trigger.
+  if vim.bo.filetype == 'ruby' or vim.bo.filetype == 'eruby' then start_ruby_lsp() end
 
   -- Autocommand to update ruby-lsp
   vim.api.nvim_create_user_command('RubyLspUpdate', function()
