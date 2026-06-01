@@ -1,6 +1,7 @@
 local ruby_lsp = {}
 local Job = require('plenary.job')
 local uv = vim.uv or vim.loop
+local has_native_lsp_config = vim.fn.has('nvim-0.11') == 1
 
 local logger = require('ruby-lsp/logger')
 
@@ -22,12 +23,51 @@ local function rmdir(dir)
   end
 end
 
+local function is_standard() return vim.fn.filereadable('.standard.yml') == 1 end
+
+local function is_rubocop() return vim.fn.filereadable('.rubocop.yml') == 1 end
+
+local function detect_tool()
+  if is_standard() then return 'standard' end
+
+  if is_rubocop() then return 'rubocop' end
+end
+
+local function build_effective_config(user_config)
+  local effective = vim.deepcopy(user_config)
+
+  -- 'mason' is a LazyVim/lspconfig-framework sentinel, not a real LSP field
+  effective.mason = nil
+
+  -- Default cmd, copying any user-supplied table so we don't mutate it
+  local cmd = vim.list_extend({}, effective.cmd or { 'ruby-lsp' })
+  if ruby_lsp.options.use_launcher then table.insert(cmd, '--use-launcher') end
+  effective.cmd = cmd
+
+  if ruby_lsp.options.autodetect_tools then
+    local tool = detect_tool()
+    if tool then
+      effective.init_options = vim.tbl_extend('force', effective.init_options or {}, {
+        formatter = tool,
+        linters = { tool },
+      })
+    end
+  end
+
+  effective.handlers = vim.tbl_extend('force', logger.handlers(), effective.handlers or {})
+
+  return effective
+end
+
 local function configure_lspconfig(config)
-  local lspconfig = require('lspconfig')
+  local effective = build_effective_config(config)
 
-  config.handlers = vim.tbl_extend('force', logger.handlers(), config.handlers or {})
-
-  lspconfig.ruby_lsp.setup(config)
+  if has_native_lsp_config then
+    vim.lsp.config('ruby_lsp', effective)
+    vim.lsp.enable('ruby_lsp')
+  else
+    require('lspconfig').ruby_lsp.setup(effective)
+  end
 end
 
 local function update_ruby_lsp(callback)
@@ -51,10 +91,6 @@ local function update_ruby_lsp(callback)
 end
 
 local function is_ruby_lsp_installed() return vim.fn.executable('ruby-lsp') == 1 end
-
-local function is_standard() return vim.fn.filereadable('.standard.yml') == 1 end
-
-local function is_rubocop() return vim.fn.filereadable('.rubocop.yml') == 1 end
 
 local function create_autocmds(client, buffer)
   -- Implementation from https://github.com/semanticart
@@ -109,12 +145,6 @@ local function install_ruby_lsp(callback)
   }):start()
 end
 
-local function detect_tool()
-  if is_standard() then return 'standard' end
-
-  if is_rubocop() then return 'rubocop' end
-end
-
 ruby_lsp.config = {
   auto_install = true,
   use_launcher = false, -- Use experimental launcher
@@ -141,28 +171,16 @@ ruby_lsp.setup = function(config)
     user_on_init(client, initialize_result)
   end
 
-  local lspconfig = require('lspconfig')
-  lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(c)
-    if c.name == 'ruby_lsp' then
-      -- Set a reasonable default if one isn't present
-      if c.cmd == nil then c.cmd = { 'ruby-lsp' } end
-
-      if ruby_lsp.options.use_launcher then table.insert(c.cmd, '--use-launcher') end
-
-      if ruby_lsp.options.autodetect_tools then
-        local tool = detect_tool()
-
-        if tool then
-          c.init_options = vim.tbl_extend('force', c.init_options or {}, {
-            formatter = tool,
-            linters = { tool },
-          })
-        end
-      end
-    end
-  end)
-
   local server_started = false
+
+  local function start_server()
+    configure_lspconfig(ruby_lsp.options.lspconfig)
+    if not has_native_lsp_config then
+      -- On 0.11+, configure_lspconfig called vim.lsp.enable, which attaches
+      -- to already-loaded matching buffers on its own.
+      vim.cmd('LspStart ruby_lsp')
+    end
+  end
 
   local function start_ruby_lsp()
     if server_started then return end
@@ -170,15 +188,9 @@ ruby_lsp.setup = function(config)
     server_started = true
 
     if not is_ruby_lsp_installed() and ruby_lsp.options.auto_install then
-      install_ruby_lsp(function()
-        configure_lspconfig(ruby_lsp.options.lspconfig)
-        -- Start the ruby lsp now that it's been configured
-        vim.cmd('LspStart ruby_lsp')
-      end)
+      install_ruby_lsp(start_server)
     else
-      configure_lspconfig(ruby_lsp.options.lspconfig)
-      -- Start the ruby lsp now that it's been configured
-      vim.cmd('LspStart ruby_lsp')
+      start_server()
     end
   end
 
@@ -195,9 +207,12 @@ ruby_lsp.setup = function(config)
 
   -- Autocommand to update ruby-lsp
   vim.api.nvim_create_user_command('RubyLspUpdate', function()
-    -- Check if ruby_lsp is running to prevent error when stopping non-existant server
-    if #vim.lsp.get_clients({ name = 'ruby_lsp' }) > 0 then
-      -- Stop LSP
+    local clients = vim.lsp.get_clients({ name = 'ruby_lsp' })
+    if has_native_lsp_config then
+      for _, client in ipairs(clients) do
+        client:stop()
+      end
+    elseif #clients > 0 then
       vim.cmd('LspStop ruby_lsp')
     end
 
@@ -206,8 +221,13 @@ ruby_lsp.setup = function(config)
 
     -- Run gem update ruby-lsp
     update_ruby_lsp(function()
-      -- Start LSP
-      vim.cmd('LspStart ruby_lsp')
+      if has_native_lsp_config then
+        -- Re-enable: clients were stopped above; enable() re-attaches to
+        -- already-loaded matching buffers.
+        vim.lsp.enable('ruby_lsp')
+      else
+        vim.cmd('LspStart ruby_lsp')
+      end
     end)
   end, { desc = 'Update the Ruby LSP server' })
 end
