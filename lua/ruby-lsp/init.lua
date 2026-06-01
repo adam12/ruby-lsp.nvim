@@ -147,7 +147,7 @@ end
 
 ruby_lsp.config = {
   auto_install = true,
-  use_launcher = false, -- Use experimental launcher
+  use_launcher = false, -- DEPRECATED: appends --use-launcher to cmd
   autodetect_tools = false, -- Autodetect the formatting and linting tools
   lspconfig = {
     mason = false, -- Prevent LazyVim from installing via Mason
@@ -157,6 +157,10 @@ ruby_lsp.config = {
 }
 
 ruby_lsp.setup = function(config)
+  if config and config.use_launcher ~= nil then
+    vim.deprecate('ruby-lsp.nvim option: use_launcher', nil, nil, 'ruby-lsp.nvim')
+  end
+
   ruby_lsp.options = vim.tbl_deep_extend('force', {}, ruby_lsp.config, config or {})
 
   local user_on_attach = ruby_lsp.options.lspconfig.on_attach
