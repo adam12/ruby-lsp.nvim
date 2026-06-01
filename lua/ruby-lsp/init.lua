@@ -56,6 +56,20 @@ local function build_effective_config(user_config)
 
   effective.handlers = vim.tbl_extend('force', logger.handlers(), effective.handlers or {})
 
+  -- nvim-lspconfig's ruby_lsp reuse_client stamps conf.cmd_cwd = conf.root_dir
+  -- then compares client.config.cmd_cwd to conf.cmd_cwd. But the first client
+  -- ever spawned has no peers, so reuse_client is never called against it and
+  -- its cmd_cwd stays nil; the next buffer's reuse check then sees nil and
+  -- spawns a duplicate. Fall back to root_dir (the source of cmd_cwd) so the
+  -- first client matches. Multi-root setups still spawn distinct clients
+  -- because their root_dir values differ.
+  effective.reuse_client = effective.reuse_client
+    or function(client, conf)
+      conf.cmd_cwd = conf.cmd_cwd or conf.root_dir
+      local client_cwd = client.config.cmd_cwd or client.config.root_dir
+      return client.name == conf.name and client_cwd == conf.cmd_cwd
+    end
+
   return effective
 end
 
