@@ -92,6 +92,32 @@ If you want to pass configuration to the Ruby LSP:
 }
 ```
 
+### Disabling the Rails pending migrations prompt
+
+If you find the Ruby LSP Rails addon's pending-migration prompt too pushy,
+disable it via `addonSettings`:
+
+```lua
+{
+  'adam12/ruby-lsp.nvim',
+  dependencies = {
+    'nvim-lua/plenary.nvim',
+  },
+  config = true,
+  opts = {
+    lspconfig = {
+      init_options = {
+        addonSettings = {
+          ['Ruby LSP Rails'] = {
+            enablePendingMigrationsPrompt = false,
+          },
+        },
+      },
+    },
+  },
+}
+```
+
 ## Code Lens
 
 This plugin provides code lens support for some Rails-specific features:
