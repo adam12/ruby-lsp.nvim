@@ -1,8 +1,8 @@
 # Ruby LSP for Neovim
 
 This Neovim plugin is a small shim around ensuring that the ruby-lsp gem is
-installed for the current Ruby version, as well as configuring lspconfig to
-start the Ruby LSP for Ruby files.
+installed for the current Ruby version, as well as configuring Neovim's LSP
+client to start the Ruby LSP for Ruby files.
 
 ## Why
 
@@ -21,10 +21,9 @@ The `ruby-lsp.nvim` plugin's goal is two fold:
 not detected when Neovim starts up. This should work perfectly for almost all
 Ruby version managers.
 
-2. Build on top of the `nvim-lspconfig` package to provide a nicer experience
-out of the box where possible. This might include extra bindings or user commands,
-or smoothing over oddities such as requesting Mason not manage the LSP when using
-the LazyVim distribution.
+2. Provide a nicer experience out of the box where possible. This might include
+extra bindings or user commands, or smoothing over oddities such as requesting
+Mason not manage the LSP when using the LazyVim distribution.
 
 ## Supported Neovim Versions
 
@@ -37,6 +36,10 @@ the LazyVim distribution.
 
 ## Installation
 
+`nvim-lspconfig` is no longer required on Neovim 0.12+ — this plugin provides
+the necessary defaults itself. Add it as a dependency only if you are on the
+unsupported 0.10/0.11 versions.
+
 With Lazy.nvim, add the following to your configuration
 
 ```lua
@@ -44,7 +47,6 @@ With Lazy.nvim, add the following to your configuration
   'adam12/ruby-lsp.nvim',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    'neovim/nvim-lspconfig',
   },
   config = true,
 }
@@ -62,7 +64,6 @@ If you'd like to disable the auto-install:
   'adam12/ruby-lsp.nvim',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    'neovim/nvim-lspconfig',
   },
   config = true,
   opts = {
@@ -71,14 +72,13 @@ If you'd like to disable the auto-install:
 }
 ```
 
-If you want to pass configuration to lspconfig:
+If you want to pass configuration to the Ruby LSP:
 
 ```lua
 {
   'adam12/ruby-lsp.nvim',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    'neovim/nvim-lspconfig',
   },
   config = true,
   opts = {

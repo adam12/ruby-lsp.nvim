@@ -44,6 +44,11 @@ local function build_effective_config(user_config)
   if ruby_lsp.options.use_launcher then table.insert(cmd, '--use-launcher') end
   effective.cmd = cmd
 
+  -- Provide the same baseline defaults nvim-lspconfig's lsp/ruby_lsp.lua does,
+  -- so the plugin works on Neovim 0.12+ without nvim-lspconfig installed.
+  effective.filetypes = effective.filetypes or { 'ruby', 'eruby' }
+  effective.root_markers = effective.root_markers or { 'Gemfile', '.git' }
+
   if ruby_lsp.options.autodetect_tools then
     local tool = detect_tool()
     if tool then
