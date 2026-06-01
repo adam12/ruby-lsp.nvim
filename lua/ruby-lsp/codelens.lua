@@ -86,7 +86,13 @@ end
 local function setup_refresh_autocmd()
   vim.api.nvim_create_autocmd({ 'LspAttach', 'BufEnter', 'CursorHold', 'InsertLeave' }, {
     pattern = { '*.rb', '*.erb' },
-    callback = function(args) vim.lsp.codelens.refresh({ bufnr = args.buf }) end,
+    callback = function(args)
+      if vim.lsp.codelens.enable then
+        vim.lsp.codelens.enable(true, { bufnr = args.buf })
+      else
+        vim.lsp.codelens.refresh({ bufnr = args.buf })
+      end
+    end,
     desc = 'Refresh active code lenses',
   })
 end
