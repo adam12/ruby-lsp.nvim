@@ -1,23 +1,24 @@
 local ruby_lsp = {}
 local Job = require('plenary.job')
+local uv = vim.uv or vim.loop
 
 local logger = require('ruby-lsp/logger')
 
 local function rmdir(dir)
-  local handle = vim.loop.fs_scandir(dir)
+  local handle = uv.fs_scandir(dir)
   if handle then
     while true do
-      local name, type = vim.loop.fs_scandir_next(handle)
+      local name, type = uv.fs_scandir_next(handle)
       if not name then break end
 
       local path = dir .. '/' .. name
       if type == 'directory' then
         rmdir(path)
       else
-        vim.loop.fs_unlink(path)
+        uv.fs_unlink(path)
       end
     end
-    vim.loop.fs_rmdir(dir)
+    uv.fs_rmdir(dir)
   end
 end
 
