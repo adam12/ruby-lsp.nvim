@@ -24,7 +24,7 @@ end
 local function configure_lspconfig(config)
   local lspconfig = require('lspconfig')
 
-  config.handlers = logger.handlers()
+  config.handlers = vim.tbl_extend('force', logger.handlers(), config.handlers or {})
 
   lspconfig.ruby_lsp.setup(config)
 end
