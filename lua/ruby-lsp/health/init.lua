@@ -7,9 +7,9 @@ local info = health.info or health.report_info
 
 local util = require('ruby-lsp.health.util')
 
-local required_plugins = {
-  { name = 'plenary' },
-  { name = 'lspconfig' },
+local plugins = {
+  { name = 'plenary', required = true },
+  { name = 'lspconfig', required = false, note = 'optional on Neovim 0.12+' },
 }
 
 local external_dependencies = {
@@ -26,13 +26,14 @@ local M = {}
 
 M.check = function()
   -- Check Lua plugins
-  start('Checking for required plugins')
-  for _, plugin in ipairs(required_plugins) do
+  start('Checking for plugins')
+  for _, plugin in ipairs(plugins) do
     if util.lualib_installed(plugin.name) then
       ok(plugin.name .. ' installed.')
+    elseif plugin.required then
+      error(plugin.name .. ' not found.')
     else
-      local msg = plugin.name .. ' not found.'
-      error(msg)
+      info(plugin.name .. ' not found (' .. (plugin.note or 'optional') .. ').')
     end
   end
 
