@@ -120,13 +120,25 @@ ruby_lsp.config = {
   autodetect_tools = false, -- Autodetect the formatting and linting tools
   lspconfig = {
     mason = false, -- Prevent LazyVim from installing via Mason
-    on_attach = function(client, buffer) create_autocmds(client, buffer) end,
-    on_init = function(_, initialize_result) logger.log_initialize(initialize_result) end,
+    on_attach = function(_client, _buffer) end,
+    on_init = function(_client, _initialize_result) end,
   },
 }
 
 ruby_lsp.setup = function(config)
   ruby_lsp.options = vim.tbl_deep_extend('force', {}, ruby_lsp.config, config or {})
+
+  local user_on_attach = ruby_lsp.options.lspconfig.on_attach
+  ruby_lsp.options.lspconfig.on_attach = function(client, buffer)
+    create_autocmds(client, buffer)
+    user_on_attach(client, buffer)
+  end
+
+  local user_on_init = ruby_lsp.options.lspconfig.on_init
+  ruby_lsp.options.lspconfig.on_init = function(client, initialize_result)
+    logger.log_initialize(initialize_result)
+    user_on_init(client, initialize_result)
+  end
 
   local lspconfig = require('lspconfig')
   lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(c)
