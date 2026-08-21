@@ -159,7 +159,9 @@ local function install_ruby_lsp(callback)
       end
     end,
     on_stderr = function(_, msg)
-      vim.schedule(function() vim.notify(msg) end)
+      if msg and msg ~= '' then
+        vim.schedule(function() vim.notify(msg) end)
+      end
     end,
   }):start()
 end
