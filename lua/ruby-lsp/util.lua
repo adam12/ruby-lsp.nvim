@@ -78,4 +78,15 @@ M.window = {
   end,
 }
 
+---String a string on whitespace
+---@param str String A string to split
+---@return table result String elements
+M.split = function(str)
+  local result = {}
+  for word in string.gmatch(str, '%S+') do
+    table.insert(result, word)
+  end
+  return result
+end
+
 return M
